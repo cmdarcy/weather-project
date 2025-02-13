@@ -26,13 +26,26 @@ const getWeatherData = async (query) => {
 const getForecastData = async (query) => {
 	try {
 		const response = await fetch(
-			`https://api.openweathermap.org/data/2.5/forecast?q=${query}&appid=${apiKey}`
+			`https://api.openweathermap.org/data/2.5/forecast?q=${query}&appid=${apiKey}&units=imperial`
 		);
 		if (!response.ok) {
 			console.log("Error");
 		} else {
 			const data = await response.json();
-			return data.list;
+			console.log(data.list);
+			const compiledForecast = data.list.reduce((acc, curr, index) => {
+				if (index % 8 === 0) {
+					acc.push({
+						date_info: { dt: curr.dt, dt_txt: curr.dt_txt },
+						temp: curr.main.temp,
+						weather: curr.weather[0],
+					});
+					return acc;
+				} else {
+					return acc;
+				}
+			}, []);
+			return compiledForecast;
 		}
 	} catch (error) {
 		console.log(error);
