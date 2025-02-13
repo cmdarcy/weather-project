@@ -1,9 +1,16 @@
+// Global Variables
+// ===================================
 const form = document.getElementsByTagName("form")[0];
 const inputField = document.querySelector(".input-control");
 const apiKey = `c8d0a8706ef69da2623e093b018f765f`;
 let weatherData;
 let forecastData;
 
+/**
+ * Fetches weather data for a given city
+ * @param {string} query - The city name to search for
+ * @returns {Promise<Object>} Weather data object or error object
+ */
 const getWeatherData = async (query) => {
 	try {
 		const response = await fetch(
@@ -27,6 +34,11 @@ const getWeatherData = async (query) => {
 	}
 };
 
+/**
+ * Fetches forecast data for a given city
+ * @param {string} query - The city name to search for
+ * @returns {Promise<Object>} Weather data object or error object
+ */
 const getForecastData = async (query) => {
 	try {
 		const response = await fetch(
@@ -38,10 +50,10 @@ const getForecastData = async (query) => {
 			);
 		} else {
 			const data = await response.json();
+			//reduces data array to 5-day forecast by taking every 8th forecast
 			const compiledForecast = data.list.reduce((acc, curr, index) => {
 				if (index % 8 === 0) {
 					acc.push({
-						date_info: { dt: curr.dt, dt_txt: curr.dt_txt },
 						day: new Date(curr.dt_txt).toLocaleDateString("en-US", {
 							weekday: "long",
 						}),
@@ -61,6 +73,12 @@ const getForecastData = async (query) => {
 	}
 };
 
+/**
+ * Renders the current weather data to the DOM
+ * Creates a card displaying city name, weather icon, temperature, and description
+ * Also creates a "Set City as Default" button if it doesn't exist
+ * @returns {void}
+ */
 const renderWeather = () => {
 	const weatherDiv = document.querySelector(".weather-container");
 	weatherDiv.replaceChildren();
@@ -99,20 +117,26 @@ const renderWeather = () => {
 	card.appendChild(cardBody);
 	weatherDiv.appendChild(card);
 
-	const defaultBtn = document.createElement("button");
-	defaultBtn.classList.add("btn", "btn-secondary");
-	defaultBtn.setAttribute("type", "button");
-	defaultBtn.innerText = "Set City as Default";
-
-	defaultBtn.addEventListener("click", () => {
-		localStorage.setItem("weatherData", JSON.stringify(weatherData));
-		localStorage.setItem("forecastData", JSON.stringify(forecastData));
-	});
 	if (!document.querySelector(".btn-secondary")) {
+		const defaultBtn = document.createElement("button");
+		defaultBtn.classList.add("btn", "btn-secondary");
+		defaultBtn.setAttribute("type", "button");
+		defaultBtn.innerText = "Set City as Default";
+
+		defaultBtn.addEventListener("click", () => {
+			localStorage.setItem("weatherData", JSON.stringify(weatherData));
+			localStorage.setItem("forecastData", JSON.stringify(forecastData));
+		});
 		form.appendChild(defaultBtn);
 	}
 };
 
+/**
+ * Renders the 5-day forecast data to the DOM
+ * Creates a list of cards displaying day of week, weather icon, temperature, and description
+ * Each card represents one day's forecast
+ * @returns {void}
+ */
 function renderForecast() {
 	const forecastsDiv = document.querySelector(".forecast-container");
 	forecastsDiv.replaceChildren();
@@ -167,6 +191,7 @@ form.addEventListener("submit", async (e) => {
 	weatherData = await getWeatherData(inputField.value);
 	forecastData = await getForecastData(inputField.value);
 
+	//checks if data fetching returned an error, if so alert user and highlight input
 	if (weatherData.error || forecastData.error) {
 		alert(`Could not fetch weather data on this city, please try another one!`);
 		inputField.classList.add("is-invalid");
@@ -178,10 +203,12 @@ form.addEventListener("submit", async (e) => {
 	inputField.value = "";
 });
 
+//removes invalid class from input upon change
 inputField.addEventListener("input", () => {
 	inputField.classList.remove("is-invalid");
 });
 
+//on DOM load checks if local storage contains default city weather info, if so renders it
 document.addEventListener("DOMContentLoaded", () => {
 	if (
 		localStorage.getItem("weatherData") &&
