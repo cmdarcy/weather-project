@@ -1,4 +1,5 @@
 const form = document.getElementsByTagName("form")[0];
+const inputField = document.querySelector(".input-control");
 const apiKey = `c8d0a8706ef69da2623e093b018f765f`;
 let weatherData;
 let forecastData;
@@ -9,7 +10,9 @@ const getWeatherData = async (query) => {
 			`https://api.openweathermap.org/data/2.5/weather?q=${query}&appid=${apiKey}&units=imperial`
 		);
 		if (!response.ok) {
-			console.log("Error");
+			throw new Error(
+				`Failed to find city: ${query} (Status: ${response.status})`
+			);
 		} else {
 			const data = await response.json();
 			return {
@@ -19,7 +22,8 @@ const getWeatherData = async (query) => {
 			};
 		}
 	} catch (error) {
-		console.log(error);
+		console.error(error);
+		return { error: error.message };
 	}
 };
 
@@ -29,7 +33,9 @@ const getForecastData = async (query) => {
 			`https://api.openweathermap.org/data/2.5/forecast?q=${query}&appid=${apiKey}&units=imperial`
 		);
 		if (!response.ok) {
-			console.log("Error");
+			throw new Error(
+				`Failed to find city: ${query} (Status: ${response.status})`
+			);
 		} else {
 			const data = await response.json();
 			const compiledForecast = data.list.reduce((acc, curr, index) => {
@@ -50,7 +56,8 @@ const getForecastData = async (query) => {
 			return compiledForecast;
 		}
 	} catch (error) {
-		console.log(error);
+		console.error(error);
+		return { error: error.message };
 	}
 };
 
@@ -144,10 +151,20 @@ function renderForecast() {
 
 form.addEventListener("submit", async (e) => {
 	e.preventDefault();
-	const input = document.querySelector(".input-control").value;
-	weatherData = await getWeatherData(input);
-	forecastData = await getForecastData(input);
+	weatherData = await getWeatherData(inputField.value);
+	forecastData = await getForecastData(inputField.value);
+
+	if (weatherData.error || forecastData.error) {
+		alert(`Could not fetch weather data on this city, please try another one!`);
+		inputField.classList.add("is-invalid");
+		inputField.focus();
+		return;
+	}
 	renderWeather();
 	renderForecast();
-	document.querySelector(".input-control").value = "";
+	inputField.value = "";
+});
+
+inputField.addEventListener("input", () => {
+	inputField.classList.remove("is-invalid");
 });
