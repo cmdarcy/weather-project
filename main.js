@@ -98,6 +98,19 @@ const renderWeather = () => {
 
 	card.appendChild(cardBody);
 	weatherDiv.appendChild(card);
+
+	const defaultBtn = document.createElement("button");
+	defaultBtn.classList.add("btn", "btn-secondary");
+	defaultBtn.setAttribute("type", "button");
+	defaultBtn.innerText = "Set City as Default";
+
+	defaultBtn.addEventListener("click", () => {
+		localStorage.setItem("weatherData", JSON.stringify(weatherData));
+		localStorage.setItem("forecastData", JSON.stringify(forecastData));
+	});
+	if (!document.querySelector(".btn-secondary")) {
+		form.appendChild(defaultBtn);
+	}
 };
 
 function renderForecast() {
@@ -167,4 +180,16 @@ form.addEventListener("submit", async (e) => {
 
 inputField.addEventListener("input", () => {
 	inputField.classList.remove("is-invalid");
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+	if (
+		localStorage.getItem("weatherData") &&
+		localStorage.getItem("forecastData")
+	) {
+		weatherData = JSON.parse(localStorage.getItem("weatherData"));
+		forecastData = JSON.parse(localStorage.getItem("forecastData"));
+		renderWeather();
+		renderForecast();
+	}
 });
