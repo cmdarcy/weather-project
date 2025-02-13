@@ -37,6 +37,9 @@ const getForecastData = async (query) => {
 				if (index % 8 === 0) {
 					acc.push({
 						date_info: { dt: curr.dt, dt_txt: curr.dt_txt },
+						day: new Date(curr.dt_txt).toLocaleDateString("en-US", {
+							weekday: "long",
+						}),
 						temp: curr.main.temp,
 						weather: curr.weather[0],
 					});
@@ -59,11 +62,41 @@ const renderWeather = () => {
 	weatherDiv.innerHTML = template;
 };
 
+function renderForecast() {
+	const forecastsDiv = document.querySelector(".forecast-container");
+	forecastsDiv.replaceChildren();
+
+	forecastData.forEach((forecast) => {
+		const forecastDiv = document.createElement("div");
+		const dateP = document.createElement("p");
+		const weatherImg = document.createElement("img");
+		const tempP = document.createElement("p");
+		const weatherP = document.createElement("p");
+
+		weatherImg.setAttribute(
+			"src",
+			`https://openweathermap.org/img/wn/${forecast.weather.icon}@2x.png`
+		);
+
+		dateP.textContent = `${forecast.day}`;
+		tempP.textContent = `${forecast.temp}`;
+		weatherP.textContent = `${forecast.weather.description}`;
+
+		forecastDiv.appendChild(dateP);
+		forecastDiv.appendChild(weatherImg);
+		forecastDiv.appendChild(tempP);
+		forecastDiv.appendChild(weatherP);
+
+		forecastsDiv.appendChild(forecastDiv);
+	});
+}
+
 form.addEventListener("submit", async (e) => {
 	e.preventDefault();
 	const input = document.querySelector(".input-control").value;
 	weatherData = await getWeatherData(input);
 	forecastData = await getForecastData(input);
 	renderWeather();
+	renderForecast();
 	document.querySelector(".input-control").value = "";
 });
